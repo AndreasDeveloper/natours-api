@@ -1,34 +1,19 @@
 // Importing Dependencies
 const epxress = require('express'),
-      fs = require('fs');
-
-
+      morgan = require('morgan');
 const app = epxress();
+// Importing Routers
+const tourRouter = require('./routes/tourRoutes');
+const userRouter = require('./routes/userRoutes');
+
+// Middlewares
+app.use(morgan('dev'));
+app.use(epxress.json());
 
 // * - Routes - * \\
+// Express Router
+app.use('/api/v1/tours', tourRouter);
+app.use('/api/v1/users', userRouter);
 
-// Reading Tours JSON Data
-const tours = JSON.parse(fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`));
-
-app.get('/api/v1/tours', (req, res) => {
-    res.status(200).json({
-        status: 'success',
-        results: tours.length,
-        data: {
-            tours
-        }
-    });
-});
-
-
-
-
-
-
-
-
-// Listening Server
-const port = 3000;
-app.listen(port, () => {
-    console.log(`App running on port ${port}..`);
-});
+// Exporting App
+module.exports = app;
