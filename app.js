@@ -1,14 +1,18 @@
 // Importing Dependencies
-const epxress = require('express'),
+const express = require('express'),
       morgan = require('morgan');
-const app = epxress();
+const app = express();
 // Importing Routers
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 
 // Middlewares
-app.use(morgan('dev'));
-app.use(epxress.json());
+if (process.env.NODE_ENV === 'development') {
+    app.use(morgan('dev'));
+}
+app.use(express.json());
+// Serving Static Files
+app.use(express.static(`${__dirname}/public`));
 
 // * - Routes - * \\
 // Express Router

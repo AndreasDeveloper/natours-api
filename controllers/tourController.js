@@ -12,6 +12,16 @@ exports.checkID = (req, res, next, val) => { // val is value of a parameter (id 
     }
     next();
 };
+// Check Body Middleware - Check if name and price are defined
+exports.checkBody = (req, res, next) => {
+    if (!req.body.name || !req.body.price) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'No Name & No Price Property defined'
+        });
+    }
+    next();
+};
 
 
 // Handler Functions for TOURS
