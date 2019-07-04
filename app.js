@@ -1,6 +1,7 @@
 // Importing Dependencies
-const express = require('express'),
-      morgan = require('morgan');
+const express = require('express');
+const morgan = require('morgan');
+
 const app = express();
 // Importing Routers
 const tourRouter = require('./routes/tourRoutes');
