@@ -45,13 +45,6 @@ exports.getTour = async (req, res) => {
             message: err
         });
     }
-    // // Sending JSON
-    // res.status(200).json({
-    //     status: 'success',
-    //     data: {
-    //         tour
-    //     }
-    // });
 };
 
 // POST - New Tour
@@ -76,21 +69,41 @@ exports.createTour = async (req, res) => {
 };
 
 // PATCH - Specific Tour
-exports.updateTour = (req, res) => {
-    // Sending JSON
-    res.status(200).json({
-        status: 'success',
-        data: {
-            tour: 'Updated Tour Placeholder' // updated tour
-        }
-    });
+exports.updateTour = async (req, res) => {
+    try {
+        // Update Tour
+        const updatedTour = await Tour.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true }); // new - returns updated document
+
+        // Sending JSON
+        res.status(200).json({
+            status: 'success',
+            data: {
+                updatedTour
+            }
+        });
+    } catch (err) {
+        res.status(404).json({
+            status: 'fail',
+            message: err
+        });
+    }
 };
 
 // DELETE - Specific Tour
-exports.deleteTour = (req, res) => {
-    // Sending JSON
-    res.status(204).json({ // 204 - No Content
-        status: 'success',
-        data: null
-    });
+exports.deleteTour = async (req, res) => {
+    try {
+        // Delete Tour
+        await Tour.findByIdAndDelete(req.params.id);
+
+        // Sending JSON
+        res.status(204).json({ // 204 - No Content
+            status: 'success',
+            data: null
+        });
+    } catch (err) {
+        res.status(404).json({
+            status: 'fail',
+            message: err
+        });
+    }
 };
