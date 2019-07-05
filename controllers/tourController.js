@@ -8,8 +8,18 @@ const Tour = require('../models/tourModel');
 // GET - All Tours
 exports.getAllTours = async (req, res) => {
     try {
-        // Getting All Tours
-        const allTours = await Tour.find({});
+        // Query Manipulation - Destructuring query object, excluding fields | FILTERING
+        const queryObj = {...req.query}; // rest paramter will take all of the fields from req.query and create new object as it was encapsulated with {}
+        const excludedFields = ['page', 'sort', 'limit', 'fields'];
+        excludedFields.forEach(el => delete queryObj[el]); // Deleting fields (keys) from query Object
+        // Query Manipulation - Replacing logical operators from query | ADVANCED FILTERING
+        let queryStr = JSON.stringify(queryObj);
+        queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+
+        // Getting All Tours || Filtering / Querying using mongoose or req.query > Build Query
+        const query = Tour.find(JSON.parse(queryStr)); //.where('duration').equals(5).where('difficulty').equals('easy');
+        // Execute query
+        const allTours = await query;
 
         // Sending Status & JSON
         res.status(200).json({
