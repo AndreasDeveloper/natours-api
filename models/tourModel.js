@@ -1,5 +1,6 @@
 // Importing Dependencies
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 // Tour Schema
 const tourSchema = new mongoose.Schema({
@@ -9,6 +10,7 @@ const tourSchema = new mongoose.Schema({
       unique: true,
       trim: true
     },
+    slug: String,
     duration: {
       type: Number,
       required: [true, 'Tour duration missing']
@@ -54,7 +56,22 @@ const tourSchema = new mongoose.Schema({
       select: false
     },
     startDates: [Date],
+  }, { // object options - adding virtual properties
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   });
+
+// Virtual Property - Convert duration to weeks
+tourSchema.virtual('durationWeeks').get(function() { // virtual properties cannot be used with/in queries
+  return this.duration / 7;
+});
+
+// Document Middleware
+tourSchema.pre('save', function(next) { // pre save hook, before document is saved
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
 // Tour Model
 const Tour = mongoose.model('Tour', tourSchema);
 
