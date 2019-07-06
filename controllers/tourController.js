@@ -5,6 +5,14 @@ const Tour = require('../models/tourModel');
 // const tours = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`));
 
 // Handler Functions for TOURS
+// Middleware for query manipulation, aliasing
+exports.aliasTopTours = (req, res, next) => {
+    req.query.limit = '5';
+    req.query.sort = '-ratingsAverage,price';
+    req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+    next();
+};
+
 // GET - All Tours
 exports.getAllTours = async (req, res) => {
     try {
@@ -17,7 +25,36 @@ exports.getAllTours = async (req, res) => {
         queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
 
         // Getting All Tours || Filtering / Querying using mongoose or req.query > Build Query
-        const query = Tour.find(JSON.parse(queryStr)); //.where('duration').equals(5).where('difficulty').equals('easy');
+        let query = Tour.find(JSON.parse(queryStr)); //.where('duration').equals(5).where('difficulty').equals('easy');
+
+        // Sorting
+        if (req.query.sort) {
+            const sortBy = req.query.sort.split(',').join(' ');
+            query = query.sort(sortBy);
+        } else { // Default sort
+            query = query.sort('-ratingsAverage');
+        }
+
+        // Field Limiting - fields=
+        if (req.query.fields) { 
+            const fields = req.query.fields.split(',').join(' '); // exclude commas, join by empty spaces to get a full string
+            query = query.select(fields);
+        } else { // Default fields
+            query = query.select('-__v'); // - (minus) presents excluding
+        }
+
+        // Pagination
+        const page = req.query.page * 1 || 1; // converting string to number. default is 1
+        const limit = req.query.limit * 1 || 100; // Results per page
+        const skip = (page - 1) * limit; // page - 1 = previous page * limit
+        // Skipping and Limiting
+        query = query.skip(skip).limit(limit);
+        // Count document and check if page doesn't exists
+        if (req.query.page) {
+            const numTours = await Tour.countDocuments(); // Count tours - total number of tours
+            if (skip >= numTours) throw new Error('This page does not exist');
+        }
+
         // Execute query
         const allTours = await query;
 
