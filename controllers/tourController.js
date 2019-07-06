@@ -1,5 +1,7 @@
 // Importing Models
 const Tour = require('../models/tourModel');
+// Importing Utilities
+const APIFeatures = require('../utils/apiFeatures');
 
 // Reading Tours JSON Data
 // const tours = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`));
@@ -16,47 +18,9 @@ exports.aliasTopTours = (req, res, next) => {
 // GET - All Tours
 exports.getAllTours = async (req, res) => {
     try {
-        // Query Manipulation - Destructuring query object, excluding fields | FILTERING
-        const queryObj = {...req.query}; // rest paramter will take all of the fields from req.query and create new object as it was encapsulated with {}
-        const excludedFields = ['page', 'sort', 'limit', 'fields'];
-        excludedFields.forEach(el => delete queryObj[el]); // Deleting fields (keys) from query Object
-        // Query Manipulation - Replacing logical operators from query | ADVANCED FILTERING
-        let queryStr = JSON.stringify(queryObj);
-        queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
-
-        // Getting All Tours || Filtering / Querying using mongoose or req.query > Build Query
-        let query = Tour.find(JSON.parse(queryStr)); //.where('duration').equals(5).where('difficulty').equals('easy');
-
-        // Sorting
-        if (req.query.sort) {
-            const sortBy = req.query.sort.split(',').join(' ');
-            query = query.sort(sortBy);
-        } else { // Default sort
-            query = query.sort('-ratingsAverage');
-        }
-
-        // Field Limiting - fields=
-        if (req.query.fields) { 
-            const fields = req.query.fields.split(',').join(' '); // exclude commas, join by empty spaces to get a full string
-            query = query.select(fields);
-        } else { // Default fields
-            query = query.select('-__v'); // - (minus) presents excluding
-        }
-
-        // Pagination
-        const page = req.query.page * 1 || 1; // converting string to number. default is 1
-        const limit = req.query.limit * 1 || 100; // Results per page
-        const skip = (page - 1) * limit; // page - 1 = previous page * limit
-        // Skipping and Limiting
-        query = query.skip(skip).limit(limit);
-        // Count document and check if page doesn't exists
-        if (req.query.page) {
-            const numTours = await Tour.countDocuments(); // Count tours - total number of tours
-            if (skip >= numTours) throw new Error('This page does not exist');
-        }
-
         // Execute query
-        const allTours = await query;
+        const features = new APIFeatures(Tour.find(), req.query).filter().sort().limitFields().pagination();
+        const allTours = await features.query;
 
         // Sending Status & JSON
         res.status(200).json({
@@ -146,6 +110,94 @@ exports.deleteTour = async (req, res) => {
         res.status(204).json({ // 204 - No Content
             status: 'success',
             data: null
+        });
+    } catch (err) {
+        res.status(404).json({
+            status: 'fail',
+            message: err
+        });
+    }
+};
+
+// GET - Tour Statistics
+exports.getTourStats = async (req, res) => {
+    try {
+        // Aggregation Pipeline with MDB
+        const stats = await Tour.aggregate([
+            {
+                $match: { ratingsAverage: { $gte: 4.5 } } // Match tours with rating of 4.5 or greater
+            },
+            {
+                $group: { 
+                    _id: { $toUpper: '$difficulty'}, // Group documents (tours) by difficulty
+                    numTours: { $sum: 1 }, // total tours
+                    numRatings: { $sum: '$ratingsQuantity' }, // total ratings
+                    avgRating: { $avg: '$ratingsAverage' }, // Average rating
+                    avgPrice: { $avg: '$price' }, // Average price
+                    minPrice: { $min: '$price' }, // Minimum tour price
+                    maxPrice: { $max: '$price' }, // Maximum tour price
+                }
+            },
+            {
+                $sort: { avgPrice: 1 } // Sort by average price (1 - asscending)
+            },
+            // {
+            //     $match: { _id: { $ne: 'EASY' } } // Repeating match, excluding easy tours ($ne - not equal)
+            // }
+        ]);
+        // Sending Status & JSON
+        res.status(200).json({ // 204 - No Content
+            status: 'success',
+            data: {
+                stats
+            }
+        });
+    } catch (err) {
+        res.status(404).json({
+            status: 'fail',
+            message: err
+        });
+    }
+};
+
+exports.getMonthlyPlan = async (req, res) => {
+    try {
+        const year = req.params.year * 1; 
+        // Aggregation Pipeline with MDB
+        const plan = await Tour.aggregate([
+            {
+                $unwind: '$startDates' // - Unwind deconstructs an array field from input documents and then output one doc for each element of an array (startDates)
+            },
+            {
+                $match: { startDates: { $gte: new Date(`${year}-01-01`), $lte: new Date(`${year}-12-31`) } } // Get 12 months of given year
+            },
+            {
+                $group: { // Group by start dates
+                    _id: { $month: '$startDates' },
+                    numTourStarts: { $sum: 1 },
+                    tours: { $push: '$name' }
+                }
+            },
+            { 
+                $addFields: { month: '$_id' } // add month field with a value of _id
+            },
+            {
+                $project: { _id: 0 } // Make _id field invisible
+            },
+            {
+                $sort: { numTourStarts: -1 } // Sort in descending order
+            },
+            // {
+            //     $limit: 12 // limit the outputs
+            // }
+        ]);
+        // Sending Status & JSON
+        res.status(200).json({ // 204 - No Content
+            status: 'success',
+            results: plan.length,
+            data: {
+                plan
+            }
         });
     } catch (err) {
         res.status(404).json({
