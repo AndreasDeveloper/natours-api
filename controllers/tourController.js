@@ -160,6 +160,7 @@ exports.getTourStats = async (req, res) => {
     }
 };
 
+// GET - Monthly Tour Statistics
 exports.getMonthlyPlan = async (req, res) => {
     try {
         const year = req.params.year * 1; 
