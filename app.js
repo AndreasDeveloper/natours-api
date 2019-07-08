@@ -1,11 +1,14 @@
 // Importing Dependencies
 const express = require('express');
 const morgan = require('morgan');
+const AppError = require('./utils/appError');
 
 const app = express();
 // Importing Routers
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
+// Importing Middleware 
+const globalErrorHandler = require('./controllers/errorController');
 
 // Middlewares
 if (process.env.NODE_ENV === 'development') {
@@ -19,6 +22,19 @@ app.use(express.static(`${__dirname}/public`));
 // Express Router
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+
+// Handling 404 Pages
+app.all('*', (req, res, next) => {
+    // const err = new Error(`Can't find ${req.originalUrl} on the server.`);
+    // err.status = 'fail';
+    // err.statusCode = 404;
+
+    // Passing error right to error handling middleware (skips over all other middlewares)
+    next(new AppError(`Can't find ${req.originalUrl} on the server.`, 404));
+});
+
+// Error Handling Middleware
+app.use(globalErrorHandler);
 
 // Exporting App
 module.exports = app;

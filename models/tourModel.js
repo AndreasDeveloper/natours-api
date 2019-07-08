@@ -1,7 +1,7 @@
 // Importing Dependencies
 const mongoose = require('mongoose');
 const slugify = require('slugify');
-const validator = require('validator');
+// const validator = require('validator');
 
 // Tour Schema
 const tourSchema = new mongoose.Schema({
