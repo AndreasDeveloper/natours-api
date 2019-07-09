@@ -22,7 +22,8 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: [true, 'Password is required'],
-        minlength: [8, 'Password must have minimum of 8 characters']
+        minlength: [8, 'Password must have minimum of 8 characters'],
+        select: false // Won't show up in output
     },
     passwordConfirm: {
         type: String,
@@ -39,6 +40,7 @@ const userSchema = new mongoose.Schema({
 
 // Pre Middleware for encrypting password
 userSchema.pre('save', async function(next) {
+    // If password is not modified - return
     if (!this.isModified('password')) return next();
 
     // Encrypting Password
@@ -46,6 +48,11 @@ userSchema.pre('save', async function(next) {
     this.passwordConfirm = undefined; // Deleting passwordConfirm field
     next();
 });
+
+// Instance Method - Check if entered password and hashed password are the 'same'
+userSchema.methods.correctPassword = async function(candidatePassword, userPassword) {
+    return await bcrypt.compare(candidatePassword, userPassword);
+};
 
 // User Model
 const User = mongoose.model('User', userSchema);
