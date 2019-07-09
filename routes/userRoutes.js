@@ -2,8 +2,12 @@
 const express = require('express');
 // Importing Controllers
 const userController = require('../controllers/userController');
+const authController = require('../controllers/authController');
 // Declaring express Router
 const router = express.Router();
+
+// Authentication Routes
+router.post('/signup', authController.signup);
 
 // User Resources - Routes
 router.route('/').get(userController.getAllUsers).post(userController.createUser);
