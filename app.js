@@ -2,13 +2,13 @@
 const express = require('express');
 const morgan = require('morgan');
 const AppError = require('./utils/appError');
-
-const app = express();
+// Importing Middleware 
+const globalErrorHandler = require('./controllers/errorController');
 // Importing Routers
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
-// Importing Middleware 
-const globalErrorHandler = require('./controllers/errorController');
+
+const app = express();
 
 // Middlewares
 if (process.env.NODE_ENV === 'development') {

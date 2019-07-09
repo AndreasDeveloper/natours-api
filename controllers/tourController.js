@@ -3,6 +3,7 @@ const Tour = require('../models/tourModel');
 // Importing Utilities
 const APIFeatures = require('../utils/apiFeatures');
 const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 
 // Reading Tours JSON Data
 // const tours = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`));
@@ -36,6 +37,11 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
 exports.getTour = catchAsync(async (req, res, next) => {
     // Getting Tour by ID
     const tour = await Tour.findById(req.params.id);
+    // If tour doesn't exists, send error
+     if (!tour) {
+        return next(new AppError('No tour found with given ID', 404));
+    }
+
     // Sending Status & JSON
     res.status(200).json({
         status: 'success',
@@ -63,6 +69,10 @@ exports.createTour = catchAsync(async (req, res, next) => {
 exports.updateTour = catchAsync(async (req, res, next) => {
     // Update Tour
     const updatedTour = await Tour.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true }); // new - returns updated document
+    // If tour doesn't exists, send error
+    if (!updatedTour) {
+        return next(new AppError('No tour found with given ID', 404));
+    }
 
     // Sending JSON
     res.status(200).json({
@@ -76,7 +86,12 @@ exports.updateTour = catchAsync(async (req, res, next) => {
 // DELETE - Specific Tour
 exports.deleteTour = catchAsync(async (req, res, next) => {
     // Delete Tour
-    await Tour.findByIdAndDelete(req.params.id);
+    const deleteTour = await Tour.findByIdAndDelete(req.params.id);
+     // If tour doesn't exists, send error
+     if (!deleteTour) {
+        return next(new AppError('No tour found with given ID', 404));
+    }
+
 
     // Sending JSON
     res.status(204).json({ // 204 - No Content
@@ -90,7 +105,7 @@ exports.getTourStats = catchAsync(async (req, res, next) => {
     // Aggregation Pipeline with MDB
     const stats = await Tour.aggregate([
         {
-                $match: { ratingsAverage: { $gte: 4.5 } } // Match tours with rating of 4.5 or greater
+            $match: { ratingsAverage: { $gte: 4.5 } } // Match tours with rating of 4.5 or greater
         },
         {
             $group: { 
