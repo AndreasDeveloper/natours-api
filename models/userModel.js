@@ -35,7 +35,8 @@ const userSchema = new mongoose.Schema({
             },
             message: 'Password didn\'t match'
         }
-    }
+    },
+    passwordChangedAt: Date
 });
 
 // Pre Middleware for encrypting password
@@ -52,6 +53,18 @@ userSchema.pre('save', async function(next) {
 // Instance Method - Check if entered password and hashed password are the 'same'
 userSchema.methods.correctPassword = async function(candidatePassword, userPassword) {
     return await bcrypt.compare(candidatePassword, userPassword);
+};
+// Instance Method - Check if user changed his password before / after JWT was issued
+userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
+    if (this.passwordChangedAt) {
+        const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+
+        console.log(changedTimestamp, JWTTimestamp);
+
+        return JWTTimestamp < changedTimestamp;
+    }
+
+    return false; // By default return false - not changed
 };
 
 // User Model

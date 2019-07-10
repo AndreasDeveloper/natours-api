@@ -19,7 +19,9 @@ const handleValidationErrorDB = err => {
     const message = `Invalid input data. ${errors.join('. ')}`;
     return new AppError(message, 400);
 };
-
+// Function for handling JWT errors
+const handleJWTError = () => new AppError('Invalid JWT. Log in again', 401);
+const handleJWTExpiredError = () => new AppError('JWT has expired. Log in again', 401);
 
 // Function for Development Errors
 const sendErrorDev = (err, res) => {
@@ -64,6 +66,8 @@ module.exports = (err, req, res, next) => {
         if (error.name === 'CastError') error = handleCastErrorDB(error);
         if (error.code === 11000) error = handleDuplicateFieldsDB(error);
         if (error.name === 'ValidationError') error = handleValidationErrorDB(error);
+        if (error.name === 'JsonWebTokenError') error = handleJWTError();
+        if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
         sendErrorProd(error, res);
     }
 };

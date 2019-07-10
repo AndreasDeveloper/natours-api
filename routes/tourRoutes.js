@@ -2,6 +2,7 @@
 const express = require('express');
 // Importing Contollers
 const tourController = require('../controllers/tourController');
+const authController = require('../controllers/authController');
 // Declaring express Router
 const router = express.Router();
 
@@ -14,7 +15,7 @@ router.route('/monthly-plan/:year').get(tourController.getMonthlyPlan); // Tours
 
 router.route('/top-5-cheap').get(tourController.aliasTopTours, tourController.getAllTours); // Top 5 Tours
 
-router.route('/').get(tourController.getAllTours).post(tourController.createTour); // GET & POST Tours
+router.route('/').get(authController.protect, tourController.getAllTours).post(tourController.createTour); // GET & POST Tours
 router.route('/:id').get(tourController.getTour).patch(tourController.updateTour).delete(tourController.deleteTour); // GET, PATCH, DELETE Tours
 
 // Exporting Tours Router

@@ -1,4 +1,5 @@
 // Importing Dependencies
+const { promisify } = require('util'); 
 const jwt = require('jsonwebtoken');
 // Importing Models
 const User = require('../models/userModel');
@@ -55,4 +56,34 @@ exports.login = catchAsync(async (req, res, next) => {
         status: 'success',
         token
     });
+});
+
+// Middleware For Authorization
+exports.protect = catchAsync(async (req, res, next) => {
+    // Get token & check if exists
+    let token;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) { // check if authorization header starts with Bearer
+        token = req.headers.authorization.split(' ')[1]; // Getting the second element of the array which is JWT
+    }
+    if (!token) {
+        return next(new AppError('You must be logged in'), 401);
+    }
+
+    // Verificate token
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); // returns promise & awaits it right away
+
+    // Check if user exists
+    const freshUser = await User.findById(decoded.id); // decoded holds id in its payload 
+    if (!freshUser) {
+        return next(new AppError('The user belonging to this token no longer exists', 401));
+    }
+
+    // Check if user changed password after the JWT was issued
+    if (freshUser.changedPasswordAfter(decoded.iat)) { // iat - issued at
+        return next(new AppError('User password changed recently. Log in again'), 401);
+    }
+
+    // Put user data on the request
+    req.user = freshUser;
+    next();
 });

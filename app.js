@@ -18,6 +18,8 @@ app.use(express.json());
 // Serving Static Files
 app.use(express.static(`${__dirname}/public`));
 
+
+
 // * - Routes - * \\
 // Express Router
 app.use('/api/v1/tours', tourRouter);
