@@ -68,7 +68,7 @@ const tourSchema = new mongoose.Schema({
       required: [true, 'Tour imageCover missing']
     },
     images: [String],
-    createAt: {
+    createdAt: {
       type: Date,
       default: Date.now(),
       select: false
@@ -137,6 +137,14 @@ tourSchema.pre(/^find/, function(next) { // pre find hook, before query was foun
   this.find({ secretTour: { $ne: true } }); // Don't show secret tours - this points to query
 
   this.start = Date.now();
+  next();
+});
+// * Query Middleware - Populate Guides
+tourSchema.pre(/^find/, function(next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt'
+  });
   next();
 });
 
