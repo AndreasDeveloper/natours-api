@@ -2,6 +2,8 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 // const validator = require('validator');
+// Importing Modles
+//const User = require('./userModel');
 
 // Tour Schema
 const tourSchema = new mongoose.Schema({
@@ -75,8 +77,39 @@ const tourSchema = new mongoose.Schema({
     secretTour: {
       type: Boolean,
       default: false
-    }
-  }, { // object options - adding virtual properties
+    },
+    startLocation: {
+      // GeoJSON format
+      type: {
+        type: String,
+        default: 'Point', // Start location
+        enum: ['Point'] // Only point is valid
+      },
+      coordinates: [Number], // Array of numbers - LONGITUDE & LATITUDE
+      address: String,
+      description: String
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point']
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number
+      }
+    ],
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User'
+      }
+    ]
+  // object options - adding virtual properties
+  }, { 
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
   });
@@ -86,29 +119,32 @@ tourSchema.virtual('durationWeeks').get(function() { // virtual properties canno
   return this.duration / 7;
 });
 
-// * Document Middleware
+// * Document Middleware - Converts tour name to lower case and slugify it
 tourSchema.pre('save', function(next) { // pre save hook, before document is saved
   this.slug = slugify(this.name, { lower: true });
   next();
 });
-// * Query Middleware
+// * Document Middleware - Embedding Guides to Tours
+// tourSchema.pre('save', async function(next) {
+//   const guidesPromises = this.guides.map(async id => await User.findById(id));
+//   this.guides = await Promise.all(guidesPromises); // Result of guidesPromises is promise, it has to be resolved
+
+//   next();
+// });
+
+// * Query Middleware - Make secret tours invisible
 tourSchema.pre(/^find/, function(next) { // pre find hook, before query was found - ^ means starts with
   this.find({ secretTour: { $ne: true } }); // Don't show secret tours - this points to query
 
   this.start = Date.now();
   next();
 });
-tourSchema.post(/^find/, function(docs, next) { // post runs after query has been executed
-  // console.log(`Query took ${Date.now() - this.start} miliseconds`);
-  // console.log(docs);
-  next();
-});
-// * Aggregation Middleware
+
+// * Aggregation Middleware - Adding match stage to the pipeline array 
 tourSchema.pre('aggregate', function(next) {
   // Adding $match stage to the begining of the pipeline array
   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } }); // Exclude secret tours from aggregation pipeline
 
-  console.log(this);
   next();
 });
 
