@@ -2,6 +2,10 @@
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 // Importing Middleware 
 const globalErrorHandler = require('./controllers/errorController');
 // Importing Utils
@@ -12,7 +16,10 @@ const userRouter = require('./routes/userRoutes');
 
 const app = express();
 
+
 // Middlewares
+// Helmet
+app.use(helmet());
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
@@ -23,8 +30,16 @@ const limiter = rateLimit({
     message: 'Too many requests from this IP, try again in 1 hour'
 });
 app.use('/api', limiter);
-// JSON / Parser
-app.use(express.json());
+// JSON / Body Parser
+app.use(express.json({ limit: '10kb' })); // Body limit is 10kb
+// Data Sanitization against NoSQL query injection
+app.use(mongoSanitize());
+// Data Sanitization against XSS
+app.use(xss());
+// Prevent parameter polution (HPP)
+app.use(hpp({
+    whitelist: ['duration', 'ratingsQuantity', 'ratingsAverage', 'maxGroupSize', 'difficulty', 'price']
+}));
 // Serving Static Files
 app.use(express.static(`${__dirname}/public`));
 
