@@ -13,6 +13,8 @@ router.post('/login', authController.login);
 // Password Reset Routes
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
+// Password Update Route
+router.patch('/updatePassword', authController.protect, authController.updatePassword);
 
 // User Resources - Routes
 router.route('/').get(userController.getAllUsers).post(userController.createUser);

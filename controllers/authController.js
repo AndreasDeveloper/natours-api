@@ -16,22 +16,30 @@ const signToken = id => {
     });
 };
 
+// Function for sending status & JSON + creating (signing) JWT
+const createSendToken = (user, statusCode, res) => {
+    // Log the user in, send JWT
+    const token = signToken(user._id);
+    // Sending Status & JSON
+    res.status(statusCode).json({
+        status: 'sucess',
+        token,
+        data: {
+            user
+        }
+    });
+};
+
+
+
+
 // POST - Sign Up New User
 exports.signup = catchAsync(async (req, res, next) => {
     // Creating new User
     const newUser = await User.create(req.body);
 
-    // Creating JWT
-    const token = signToken(newUser._id);
-
     // Sending Status & JSON
-    res.status(201).json({ // 201 - Created
-        status: 'success',
-        token,
-        data: {
-            user: newUser
-        }
-    });
+    createSendToken(newUser, 201, res);
 });
 
 // POST - Login User
@@ -51,13 +59,8 @@ exports.login = catchAsync(async (req, res, next) => {
         return next(new AppError('Incorrect email or password', 401)); // 401 - Unauthorised
     }
 
-    // Send token to client
-    const token = signToken(user._id);
     // Sending Status & JSON
-    res.status(200).json({
-        status: 'success',
-        token
-    });
+    createSendToken(user, 200, res);
 });
 
 // Middleware For Authorization
@@ -101,7 +104,7 @@ exports.restrictTo = (...roles) => {
     };
 };
 
-// Middleware for Forgetting the password and sending reset link to user
+// Middleware for Forgetting the password and sending reset link to user - FORGOT PASSWORD
 exports.forgotPassword = catchAsync(async (req, res, next) => {
     // Get user based on posted email
     const user = await User.findOne({ email: req.body.email });
@@ -138,7 +141,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     }
 });
 
-// Middleware for
+// Middleware for resetting password - FORGOT PASSWORD
 exports.resetPassword = catchAsync(async (req, res, next) => {
     // Get user based on the token
     const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
@@ -158,11 +161,26 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
     // Update changedPasswordAt property for the user    
 
-    // Log the user in, send JWT
-    const token = signToken(user._id);
     // Sending Status & JSON
-    res.status(200).json({
-        status: 'sucess',
-        token
-    });
+    createSendToken(user, 200, res);
+});
+
+
+// Middleware for updating password - logged in users
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // Get user 
+  const user = await User.findById(req.user.id).select('+password');
+
+  // Check if posted password is correct
+  if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+      return next(new AppError('Current password is incorrect', 401));
+  }
+
+  // If password is correct, update the password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save();
+
+   // Sending Status & JSON
+   createSendToken(user, 200, res);
 });
