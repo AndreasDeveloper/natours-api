@@ -15,6 +15,8 @@ router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
 // Password Update Route
 router.patch('/updatePassword', authController.protect, authController.updatePassword);
+// User Data Update Route
+router.patch('/updateMe', authController.protect, userController.updateMe);
 
 // User Resources - Routes
 router.route('/').get(userController.getAllUsers).post(userController.createUser);
