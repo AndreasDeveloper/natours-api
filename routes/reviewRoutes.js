@@ -4,7 +4,7 @@ const express = require('express');
 const authController = require('../controllers/authController');
 const reviewController = require('../controllers/reviewController');
 // Declaring express Router
-const router = express.Router();
+const router = express.Router({ mergeParams: true }); // get params from previous route (tourRoutes)
 
 // Review Routes
 router.route('/').get(authController.protect, reviewController.getAllReviews).post(authController.protect, authController.restrictTo('user'), reviewController.createReview);

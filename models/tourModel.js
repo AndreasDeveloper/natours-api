@@ -119,6 +119,13 @@ tourSchema.virtual('durationWeeks').get(function() { // virtual properties canno
   return this.duration / 7;
 });
 
+// Virtual Property - Virtual populate - Populating and setting reviews field to model without touching db directly
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour', // tour field in reviewModel
+  localField: '_id' // Where is id stored in current model
+});
+
 // * Document Middleware - Converts tour name to lower case and slugify it
 tourSchema.pre('save', function(next) { // pre save hook, before document is saved
   this.slug = slugify(this.name, { lower: true });
