@@ -44,7 +44,12 @@ const userSchema = new mongoose.Schema({
     },
     passwordChangedAt: Date,
     passwordResetToken: String,
-    passwordResetExpires: Date
+    passwordResetExpires: Date,
+    active: {
+        type: Boolean,
+        default: true,
+        select: false
+    }
 });
 
 // Pre Middleware for encrypting password
@@ -64,6 +69,12 @@ userSchema.pre('save', function(next) {
     this.passwordChangedAt = Date.now() - 1000; // Change date 1 second in the past to avoid collision while creating JWT
     next();
 });
+// Pre Middleware for excluding inactive users (deleted)
+userSchema.pre(/^find/, function(next) { // this middleware points to current query (find)
+    this.find({ active: { $ne: false } }); // $ne - not equal to
+    next();
+});
+
 
 // Instance Method - Check if entered password and hashed password are the 'same'
 userSchema.methods.correctPassword = async function(candidatePassword, userPassword) {

@@ -51,6 +51,17 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     });
 });
 
+// DELETE - Currently authenticated user
+exports.deleteMe = catchAsync(async (req, res, next) => {
+    await User.findByIdAndUpdate(req.user.id, { active: false });
+
+    // Sending Status & JSON
+    res.status(204).json({ // 204 - Deleted
+        status: 'success',
+        data: null
+    });
+});
+
 // GET - Specific User
 exports.getUser = (req, res) => {
     res.status(500).json({ // 500 - Internal Server Error

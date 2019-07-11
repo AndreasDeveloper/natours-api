@@ -20,6 +20,19 @@ const signToken = id => {
 const createSendToken = (user, statusCode, res) => {
     // Log the user in, send JWT
     const token = signToken(user._id);
+
+    // Setting cookie options
+    const cookieOptions = {
+        expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+        httpOnly: true // Cannot be modified in browser
+    }
+    // Putting JWT into Cookies
+    if (process.env.NODE_ENV === 'production') cookieOptions.secure = true; // cookie will show only on https
+    res.cookie('jwt', token, cookieOptions);
+
+    // Remove password from the output
+    user.password = undefined;
+
     // Sending Status & JSON
     res.status(statusCode).json({
         status: 'sucess',
@@ -29,7 +42,6 @@ const createSendToken = (user, statusCode, res) => {
         }
     });
 };
-
 
 
 

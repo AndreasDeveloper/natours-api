@@ -17,6 +17,8 @@ router.patch('/resetPassword/:token', authController.resetPassword);
 router.patch('/updatePassword', authController.protect, authController.updatePassword);
 // User Data Update Route
 router.patch('/updateMe', authController.protect, userController.updateMe);
+// User Delete Route (Turning off account)
+router.delete('/deleteMe', authController.protect, userController.deleteMe);
 
 // User Resources - Routes
 router.route('/').get(userController.getAllUsers).post(userController.createUser);
