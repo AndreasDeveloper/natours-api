@@ -1,4 +1,5 @@
 // Importing Dependencies
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
@@ -19,6 +20,11 @@ const userSchema = new mongoose.Schema({
     photo: {
         type: String
     },
+    role: {
+        type: String,
+        enum: ['user', 'guide', 'lead-guide', 'admin'],
+        default: 'user'
+    },
     password: {
         type: String,
         required: [true, 'Password is required'],
@@ -36,7 +42,9 @@ const userSchema = new mongoose.Schema({
             message: 'Password didn\'t match'
         }
     },
-    passwordChangedAt: Date
+    passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date
 });
 
 // Pre Middleware for encrypting password
@@ -49,6 +57,13 @@ userSchema.pre('save', async function(next) {
     this.passwordConfirm = undefined; // Deleting passwordConfirm field
     next();
 });
+// Pre Middleware for updating passwordChangedAt field
+userSchema.pre('save', function(next) {
+    if (!this.isModified('password') || this.isNew) return next(); // If password is not modified or if document is new
+
+    this.passwordChangedAt = Date.now() - 1000; // Change date 1 second in the past to avoid collision while creating JWT
+    next();
+});
 
 // Instance Method - Check if entered password and hashed password are the 'same'
 userSchema.methods.correctPassword = async function(candidatePassword, userPassword) {
@@ -59,12 +74,22 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
     if (this.passwordChangedAt) {
         const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
 
-        console.log(changedTimestamp, JWTTimestamp);
-
         return JWTTimestamp < changedTimestamp;
     }
 
     return false; // By default return false - not changed
+};
+
+// Instance Method - Create password reset token
+userSchema.methods.createPasswordResetToken = function() {
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    // Encrypting reset token
+    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 Minutes
+
+    // Return reset token for email
+    return resetToken;
 };
 
 // User Model
