@@ -34,9 +34,10 @@ const tourSchema = new mongoose.Schema({
       type: Number,
       default: 4.5,
       min: [1, 'Rating must be above 1.0'],
-      max: [5, 'Rating must be below 5.0']
+      max: [5, 'Rating must be below 5.0'],
+      set: val => Math.round(val * 10) / 10 // setter function will run each time value is updated
     },
-    ratingQuantity: {
+    ratingsQuantity: {
       type: Number,
       default: 0
     },
@@ -108,11 +109,15 @@ const tourSchema = new mongoose.Schema({
         ref: 'User'
       }
     ]
-  // object options - adding virtual properties
-  }, { 
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true }
-  });
+// object options - adding virtual properties
+}, { 
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Setting index to price & ratingsAverage - 1 Ascending | -1 Descending
+tourSchema.index({ price: 1, ratingsAverage: -1 }); // Compound index
+tourSchema.index({ slug: 1 });
 
 // Virtual Property - Convert duration to weeks
 tourSchema.virtual('durationWeeks').get(function() { // virtual properties cannot be used with/in queries
