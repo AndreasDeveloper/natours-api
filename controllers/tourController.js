@@ -1,6 +1,7 @@
 // Importing Models
 const Tour = require('../models/tourModel');
 // Importing Utilities
+const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 // Importing Controllers
 const factory = require('./handlerFactory');
@@ -104,6 +105,31 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
         results: plan.length,
         data: {
             plan
+        }
+    });
+});
+
+// GET - Tours within Radius | Geospatial
+exports.getToursWithin = catchAsync(async (req, res, next) => {
+    // Declaring Variables
+    const { distance, latlng, unit } = req.params;
+    const [lat, lng] = latlng.split(','); 
+    const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1; // 3963.2 = Earth radius in Miles. 6378.1 = Earth radius in Kilometers
+
+    // Check if lat and lng exists
+    if (!lat || !lng) {
+        next(new AppError('Provide lantitude and longitude in the format: lat, lng', 400));
+    }
+
+    // Querying for geospatial locations
+    const tours = await Tour.find({ startLocation: { $geoWithin: { $centerSphere: [[ lng, lat ], radius] } } });
+
+    // Sending Status & JSON
+    res.status(200).json({
+        status: 'success',
+        results: tours.length,
+        data: {
+            tours
         }
     });
 });

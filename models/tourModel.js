@@ -118,6 +118,7 @@ const tourSchema = new mongoose.Schema({
 // Setting index to price & ratingsAverage - 1 Ascending | -1 Descending
 tourSchema.index({ price: 1, ratingsAverage: -1 }); // Compound index
 tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation: '2dsphere' }); // using 2dsphere index for real life locations on earth
 
 // Virtual Property - Convert duration to weeks
 tourSchema.virtual('durationWeeks').get(function() { // virtual properties cannot be used with/in queries
