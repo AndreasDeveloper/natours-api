@@ -1,3 +1,5 @@
+// Importing Node Modules
+const path = require('path');
 // Importing Dependencies
 const express = require('express');
 const morgan = require('morgan');
@@ -17,8 +19,13 @@ const reviewRouter = require('./routes/reviewRoutes');
 
 const app = express();
 
+// Setting Template Engine
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
 
 // Middlewares
+// Serving Static Files
+app.use(express.static(path.join(__dirname, 'public')));
 // Helmet
 app.use(helmet());
 // Morgan
@@ -42,12 +49,16 @@ app.use(xss());
 app.use(hpp({
     whitelist: ['duration', 'ratingsQuantity', 'ratingsAverage', 'maxGroupSize', 'difficulty', 'price']
 }));
-// Serving Static Files
-app.use(express.static(`${__dirname}/public`));
 
 
 // * - Routes - * \\
-// Express Router
+
+// Routes - Rendered Routes
+app.get('/', (req, res) => {
+    res.status(200).render('base');
+});
+
+// Express Router - API Routes
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
