@@ -13,13 +13,18 @@ router.post('/login', authController.login);
 // Password Reset Routes
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
-// Password Update Route
-router.patch('/updatePassword', authController.protect, authController.updatePassword);
-// User Data Update Route
-router.patch('/updateMe', authController.protect, userController.updateMe);
-// User Delete Route (Turning off account)
-router.delete('/deleteMe', authController.protect, userController.deleteMe);
 
+// Call Protect Middleware for all upcoming routes ->
+router.use(authController.protect); 
+// Password Update Route
+router.patch('/updatePassword', authController.updatePassword);
+// User Data Update Route (@Me) 
+router.get('/me', userController.getMe, userController.getUser);
+router.patch('/updateMe', userController.updateMe);
+router.delete('/deleteMe', userController.deleteMe);
+
+// Call Restrict To for all upcoming routes ->
+router.use(authController.restrictTo('admin'));
 // User Resources - Routes
 router.route('/').get(userController.getAllUsers).post(userController.createUser);
 router.route('/:id').get(userController.getUser).patch(userController.updateUser).delete(userController.deleteUser);

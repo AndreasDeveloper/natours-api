@@ -17,6 +17,16 @@ const filterObj = (obj, ...allowedFields) => {
 
 // ------ Handler Functions for USERS ------- 
 
+
+// GET - Currently authenticated user - User Only
+// Middleware Function for setting params id to user id
+exports.getMe = (req, res, next) => {
+    req.params.id = req.user.id;
+    next();
+};
+// GET - Specific User
+exports.getUser = factory.getOne(User);
+
 // PATCH - Currently authenticated user - User Only
 exports.updateMe = catchAsync(async (req, res, next) => {
     // Display error if user POSTs password data
@@ -49,9 +59,6 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
 });
 
 
-
-// GET - Specific User
-exports.getUser = factory.getOne(User);
 
 // POST - New User
 exports.createUser = (req, res) => {
