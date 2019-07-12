@@ -16,6 +16,7 @@ const AppError = require('./utils/appError');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
+const viewRouter = require('./routes/viewRoutes');
 
 const app = express();
 
@@ -53,10 +54,8 @@ app.use(hpp({
 
 // * - Routes - * \\
 
-// Routes - Rendered Routes
-app.get('/', (req, res) => {
-    res.status(200).render('base');
-});
+// Express Router - View Routes
+app.use('/', viewRouter);
 
 // Express Router - API Routes
 app.use('/api/v1/tours', tourRouter);
