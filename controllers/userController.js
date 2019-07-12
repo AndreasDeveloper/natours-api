@@ -3,7 +3,8 @@ const User = require('../models/userModel');
 // Importing Utils
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
-
+// Importing Controllers
+const factory = require('./handlerFactory');
 
 // Function for filtering objects / keys
 const filterObj = (obj, ...allowedFields) => {
@@ -14,24 +15,9 @@ const filterObj = (obj, ...allowedFields) => {
     return newObj;
 };
 
+// ------ Handler Functions for USERS ------- 
 
-// Handler Functions for USERS
-// GET - All Users
-exports.getAllUsers = catchAsync(async (req, res) => {
-    // Getting all Users
-    const allUsers = await User.find();
-
-    // Sending Status & JSON
-    res.status(200).json({
-        status: 'success',
-        results: allUsers.length,
-        data: {
-            allUsers
-        }
-    });
-});
-
-// PATCH - Currently authenticated user
+// PATCH - Currently authenticated user - User Only
 exports.updateMe = catchAsync(async (req, res, next) => {
     // Display error if user POSTs password data
     if (req.body.password || req.body.passwordConfirm) {
@@ -51,7 +37,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     });
 });
 
-// DELETE - Currently authenticated user
+// DELETE - Currently authenticated user - User only
 exports.deleteMe = catchAsync(async (req, res, next) => {
     await User.findByIdAndUpdate(req.user.id, { active: false });
 
@@ -62,34 +48,24 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
     });
 });
 
+
+
 // GET - Specific User
-exports.getUser = (req, res) => {
-    res.status(500).json({ // 500 - Internal Server Error
-        status: 'error',
-        message: 'Route not defined'
-    });
-};
+exports.getUser = factory.getOne(User);
 
 // POST - New User
 exports.createUser = (req, res) => {
     res.status(500).json({ // 500 - Internal Server Error
         status: 'error',
-        message: 'Route not defined'
+        message: 'Route not defined. Use /signup instead.'
     });
 };
+
+// GET - All Users - Administrator Only
+exports.getAllUsers = factory.getAll(User);
 
 // PATCH - Specific User - Administrator Only
-exports.updateUser = (req, res) => {
-    res.status(500).json({ // 500 - Internal Server Error
-        status: 'error',
-        message: 'Route not defined'
-    });
-};
+exports.updateUser = factory.updateOne(User);
 
-// DELETE - Specific User
-exports.deleteUser = (req, res) => {
-    res.status(500).json({ // 500 - Internal Server Error
-        status: 'error',
-        message: 'Route not defined'
-    });
-};
+// DELETE - Specific User - Administrator Only 
+exports.deleteUser = factory.deleteOne(User);
