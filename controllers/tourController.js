@@ -133,3 +133,46 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
         }
     });
 });
+
+// GET - Tour Distances | Geospatial
+exports.getDistances = catchAsync(async (req, res, next) => {
+    // Declaring Variables
+    const { latlng, unit } = req.params;
+    const [lat, lng] = latlng.split(','); 
+
+    // Mi / Km Multiplier
+    const multipler = unit === 'mi' ? 0.000621371 : 0.001;
+
+    // Check if lat and lng exists
+    if (!lat || !lng) {
+        next(new AppError('Provide lantitude and longitude in the format: lat, lng', 400));
+    }
+
+    // Aggregation Pipeline for Geospatial
+    const distances = await Tour.aggregate([
+        {
+            $geoNear: { // geoNear is the only geospatial stage in aggregation pipeline and always has to be declared first
+                near: { // point on which to calculate distances
+                    type: 'Point',
+                    coordinates: [lng * 1, lat * 1] // *1 to convert to numbers
+                },
+                distanceField: 'distance', // distance field will be created holding distances
+                distanceMultiplier: multipler // Multiple distances by 1000
+            }
+        },
+        {
+            $project: { // Which fields will be outputed
+                distance: 1,
+                name: 1
+            }
+        }
+    ]);
+
+    // Sending Status & JSON
+    res.status(200).json({
+        status: 'success',
+        data: {
+            distances
+        }
+    });
+});

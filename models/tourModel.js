@@ -163,8 +163,10 @@ tourSchema.pre(/^find/, function(next) {
 
 // * Aggregation Middleware - Adding match stage to the pipeline array 
 tourSchema.pre('aggregate', function(next) {
+  // this.pipeline().unshift({ $match: { secretTour: { $ne: true } } }); // Exclude secret tours from aggregation pipeline
+  
   // Adding $match stage to the begining of the pipeline array
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } }); // Exclude secret tours from aggregation pipeline
+  this.pipeline().splice(1, 0, { $match: { secretTour: { $ne: true } } }); // Exclude secret tours from aggregation pipeline
 
   next();
 });
