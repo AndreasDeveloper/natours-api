@@ -606,6 +606,7 @@ body {
   grid-auto-flow: column;
   overflow-x: scroll;
   -ms-scroll-snap-type: x mandatory;
+  -webkit-scroll-snap-type: x mandatory;
   scroll-snap-type: x mandatory;
 }
 .reviews__card {

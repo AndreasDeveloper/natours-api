@@ -10,7 +10,7 @@ const router = express.Router();
 // GET - Tours Overview
 router.get('/', viewsController.getOverview);
 // GET - Tour
-router.get('/tour', viewsController.getTour);
+router.get('/tour/:tourName', viewsController.getTour);
 
 
 // Exporting View routes Rotuer
