@@ -2,6 +2,12 @@ extends base
 //- Icluding Mixins
 include mixins/_reviewCard
 
+//- Appending head tag content from base & adding CDNs
+block append head
+    script(src='https://api.mapbox.com/mapbox-gl-js/v1.0.0/mapbox-gl.js')
+    link(href='https://api.mapbox.com/mapbox-gl-js/v1.0.0/mapbox-gl.css' rel='stylesheet')
+
+
 //- Mixin for Overview Box
 mixin overviewBox(label, text, icon)
     .overview-box__detail
@@ -12,6 +18,7 @@ mixin overviewBox(label, text, icon)
         
 //- Block
 block content
+    //- Header 
     section.section-header
         .header__hero
             .header__hero-overlay &nbsp;
@@ -29,7 +36,7 @@ block content
                     svg.heading-box__icon
                         use(xlink:href='/img/icons.svg#icon-map-pin')
                     span.heading-box__text #{tour.startLocation.description}
-
+    //- Section Description
     section.section-description
         .overview-box
             div
@@ -62,21 +69,21 @@ block content
             //- Looping through paragraphs
             each p in paragraphs
                 p.description__text #{p}
-
+    //- Section Pictures
     section.section-pictures
         each img, i in tour.images
             .picture-box
                 img.picture-box__img(src=`/img/tours/${img}`, alt=`${tour.name} ${i + 1}` class=`picture-box__img--${i + 1}`)
-
+    //- Map
     section.section-map
-        #map
-
+        #map(data-locations=`${JSON.stringify(tour.locations)}`)
+    //- Section Reviews
     section.section-reviews
         .reviews
 
             each review in tour.reviews
                 +reviewCard(review)
-
+    //- Section Call To Action
     section.section-cta
         .cta
             .cta__img.cta__img--logo
