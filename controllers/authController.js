@@ -35,7 +35,7 @@ const createSendToken = (user, statusCode, res) => {
 
     // Sending Status & JSON
     res.status(statusCode).json({
-        status: 'sucess',
+        status: 'success',
         token,
         data: {
             user
@@ -81,7 +81,10 @@ exports.protect = catchAsync(async (req, res, next) => {
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) { // check if authorization header starts with Bearer
         token = req.headers.authorization.split(' ')[1]; // Getting the second element of the array which is JWT
+    } else if (req.cookies.jwt) {
+        token = req.cookies.jwt;
     }
+    // If Token Doesn't Exists
     if (!token) {
         return next(new AppError('You must be logged in'), 401);
     }
@@ -141,7 +144,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     
         // Sending Status & JSON
         res.status(200).json({
-            status: 'sucess',
+            status: 'success',
             message: 'Token sent to email'
         });
     } catch (err) { // If error, reset both 
@@ -195,4 +198,28 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 
    // Sending Status & JSON
    createSendToken(user, 200, res);
+});
+
+
+// Middleware For checking is user is logged in (for rendering pages)
+exports.isLoggedIn = catchAsync(async (req, res, next) => {
+    if (req.cookies.jwt) {
+        // Verificate token that is stored in cookie
+        const decoded = await promisify(jwt.verify)(req.cookies.jwt, process.env.JWT_SECRET); // returns promise & awaits it right away
+
+        // Check if user exists
+        const currentUser = await User.findById(decoded.id); // decoded holds id in its payload 
+        if (!currentUser) {
+            return next();
+        }
+
+        // Check if user changed password after the JWT was issued
+        if (currentUser.changedPasswordAfter(decoded.iat)) { // iat - issued at
+            return next();
+        }
+        // There is a logged in user
+        res.locals.user = currentUser;
+        return next();
+    }
+    next();
 });

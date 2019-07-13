@@ -8,6 +8,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
 // Importing Middleware 
 const globalErrorHandler = require('./controllers/errorController');
 // Importing Utils
@@ -42,6 +43,8 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 // JSON / Body Parser
 app.use(express.json({ limit: '10kb' })); // Body limit is 10kb
+// Cookie Parser
+app.use(cookieParser());
 // Data Sanitization against NoSQL query injection
 app.use(mongoSanitize());
 // Data Sanitization against XSS
@@ -51,6 +54,12 @@ app.use(hpp({
     whitelist: ['duration', 'ratingsQuantity', 'ratingsAverage', 'maxGroupSize', 'difficulty', 'price']
 }));
 
+
+// Middleware Function for testing purposes ONLY
+app.use((req, res, next) => {
+    console.log(req.cookies);
+    next(); 
+});
 
 // * - Routes - * \\
 
