@@ -3,12 +3,13 @@
 // Importing Files
 import '@babel/polyfill';
 import { displayMap } from './mapbox';
-import { login } from './login';
+import { login, logout } from './login';
 
 
 // DOM Elements
 const mapBox = document.getElementById('map');
 const loginForm = document.querySelector('.form');
+const logoutBtn = document.querySelector('.nav__el--logout');
 
 // -- Map box setup -- \\
 // Delegation
@@ -18,7 +19,7 @@ if (mapBox) {
 }
 
 
-// Event Listener on submission of a form
+// Event Listener on submission of a form | Logging in user
 if (loginForm) {
     loginForm.addEventListener('submit', e => {
         e.preventDefault();
@@ -27,3 +28,6 @@ if (loginForm) {
         login(email, password);
     });
 }
+
+// Event Listener on logout button click | Logging out user
+if (logoutBtn) logoutBtn.addEventListener('click', logout);

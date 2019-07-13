@@ -57,7 +57,7 @@ app.use(hpp({
 
 // Middleware Function for testing purposes ONLY
 app.use((req, res, next) => {
-    console.log(req.cookies);
+    // console.log(req.cookies);
     next(); 
 });
 
