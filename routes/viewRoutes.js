@@ -8,14 +8,18 @@ const router = express.Router();
 
 // Routes 
 
-router.use(authController.isLoggedIn);
 // GET - Tours Overview
-router.get('/', viewsController.getOverview);
+router.get('/', authController.isLoggedIn, viewsController.getOverview);
 // GET - Tour
-router.get('/tour/:tourName', viewsController.getTour);
+router.get('/tour/:tourName', authController.isLoggedIn, viewsController.getTour);
 // GET - Login Page
-router.get('/login', viewsController.getLoginForm);
+router.get('/login', authController.isLoggedIn, viewsController.getLoginForm);
+// GET - User Account
+router.get('/me', authController.protect, viewsController.getAccount);
 
+
+// POST - Edit User Data (Old Fashioned Way)
+router.post('/submit-user-data', authController.protect, viewsController.updateUserData);
 
 // Exporting View routes Rotuer
 module.exports = router;
