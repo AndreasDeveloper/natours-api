@@ -1,7 +1,11 @@
 /* eslint-disable */
 
+// Importing Files
+import axios from 'axios';
+import { showAlert } from './alerts';
+
 // Login Function
-const login = async (email, password) => {
+export const login = async (email, password) => {
     try {
         const res = await axios({
             method: 'POST',
@@ -13,26 +17,12 @@ const login = async (email, password) => {
         });
 
         if (res.data.status === 'success') {
-            alert('Logged In');
+            showAlert('success', 'Logged in successfully');
             window.setTimeout(() => {
                 location.assign('/');
             }, 1500);
         }
-
     } catch (err) {
-        alert(err.response.data.message);
+        showAlert('error', err.response.data.message);
     }
 };
-
-// DOM Elements
-const form = document.querySelector('.form');
-
-// Event Listener on submission of a form
-form.addEventListener('submit', e => {
-    e.preventDefault();
-
-    // Getting DOM Email & Password Input Field Values
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    login(email, password);
-});
