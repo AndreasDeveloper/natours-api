@@ -21,7 +21,7 @@ router.use(authController.protect);
 router.patch('/updatePassword', authController.updatePassword);
 // User Data Update Route (@Me) 
 router.get('/me', userController.getMe, userController.getUser);
-router.patch('/updateMe', userController.updateMe);
+router.patch('/updateMe', userController.uploadUserPhoto, userController.resizeUserPhoto, userController.updateMe);
 router.delete('/deleteMe', userController.deleteMe);
 
 // Call Restrict To for all upcoming routes ->
