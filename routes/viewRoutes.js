@@ -3,13 +3,14 @@ const express = require('express');
 // Importing Controllers
 const viewsController = require('../controllers/viewsController');
 const authController = require('../controllers/authController');
+const bookingController = require('../controllers/bookingController');
 // Declaring express Router
 const router = express.Router();
 
 // Routes 
 
 // GET - Tours Overview
-router.get('/', authController.isLoggedIn, viewsController.getOverview);
+router.get('/', bookingController.createBookingCheckout, authController.isLoggedIn, viewsController.getOverview);
 // GET - Tour
 router.get('/tour/:tourName', authController.isLoggedIn, viewsController.getTour);
 // GET - Login Page
