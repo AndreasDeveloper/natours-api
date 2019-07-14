@@ -17,6 +17,8 @@ router.get('/tour/:tourName', authController.isLoggedIn, viewsController.getTour
 router.get('/login', authController.isLoggedIn, viewsController.getLoginForm);
 // GET - User Account
 router.get('/me', authController.protect, viewsController.getAccount);
+// GET - User Bookings
+router.get('/my-tours', authController.protect, viewsController.getMyTours);
 
 
 // POST - Edit User Data (Old Fashioned Way)

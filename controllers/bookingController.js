@@ -1,5 +1,7 @@
 // Importing Dependencies
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+// Importing Controllers
+const factory = require('../controllers/handlerFactory');
 // Importing Models
 const Tour = require('../models/tourModel');
 const Booking = require('../models/bookingModel');
@@ -51,3 +53,18 @@ exports.createBookingCheckout = catchAsync(async (req, res, next) => {
     // Redirecting
     res.redirect(req.originalUrl.split('?')[0]);
 });
+
+// GET - Bookings
+exports.getAllBookings = factory.getAll(Booking);
+
+// GET - Specific Booking
+exports.getBooking = factory.getOne(Booking);
+
+// POST - New Bookings
+exports.createBooking = factory.createOne(Booking);
+
+// PATCH - Specific Booking
+exports.updateBooking = factory.updateOne(Booking);
+
+// DELETE - Specific Booking
+exports.deleteBooking = factory.deleteOne(Booking);

@@ -1,6 +1,7 @@
 // Importing Models
 const Tour = require('../models/tourModel');
 const User = require('../models/userModel');
+const Booking = require('../models/bookingModel');
 // Importing Utilities
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
@@ -42,6 +43,21 @@ exports.getAccount = (req, res) => {
     // Render Template
     res.status(200).render('account', { title: 'Your Account' });
 };
+
+// GET - User Bookings
+exports.getMyTours = catchAsync(async (req, res, next) => {
+    // Find all bookings
+    const bookings = await Booking.find({ user: req.user.id });
+
+    // Find tours with the returned IDs
+    const tourIDs = bookings.map(el => el.tour);
+    const tours = await Tour.find({ _id: { $in: tourIDs } }); // $in - select all the tours which have id which is in tourIDs array
+
+    // Sending Status & Rendering Template
+    res.status(200).render('overview', { title: 'My Bookings',  tours});
+
+    next();
+});
 
 
 // POST - Update User Data
