@@ -1,3 +1,6 @@
+// Importing Dependencies
+const multer = require('multer');
+const sharp = require('sharp');
 // Importing Models
 const Tour = require('../models/tourModel');
 // Importing Utilities
@@ -8,6 +11,63 @@ const factory = require('./handlerFactory');
 
 // Reading Tours JSON Data
 // const tours = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`));
+
+
+// --- Multer Setup --- \\
+const multerStorage = multer.memoryStorage(); // Saving files to memory | buffer save
+
+// Creating Multer Filter - Check if uplaoded file is image
+const multerFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('image')) {
+        cb(null, true);
+    } else {
+        cb(new AppError('File is not a image type', 400), false);
+    }
+};
+
+// Setting up Multer
+const upload = multer({  // dest to save files in fs
+    storage: multerStorage,
+    fileFilter: multerFilter
+});
+
+// Middleware Function for uploading tour images
+exports.uploadTourImages = upload.fields([
+    { name: 'imageCover', maxCount: 1 },
+    { name: 'images', maxCount: 3 }
+]);
+// Middleware Function for resizing tour images
+exports.resizeTourImages = catchAsync(async (req, res, next) => {
+    if (!req.files.imageCover || !req.files.images) return next();
+
+    // Defining filenames || Inserting imageCoverFilename to body in order to update it
+    req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`; 
+
+    // Resizing Cover Image
+    await sharp(req.files.imageCover[0].buffer)
+        .resize(2000, 1333) // width, height
+        .toFormat('jpeg') // to jpeg
+        .jpeg({ quality: 90 }) // 90% quality
+        .toFile(`public/img/tours/${req.body.imageCover}`);
+    
+    // Resizing tour images
+    req.body.images = []; // images field in tour model expects string of image name files
+    await Promise.all(req.files.images.map(async (file, i) => {
+        const filename = `tour-${req.params.id}-${Date.now()}-${i + 1}.jpeg`; 
+
+    await sharp(file.buffer)
+        .resize(2000, 1333) // width, height
+        .toFormat('jpeg') // to jpeg
+        .jpeg({ quality: 90 }) // 90% quality
+        .toFile(`public/img/tours/${filename}`);
+
+    // Pushing files to images on body
+    req.body.images.push(filename);
+    }));
+
+    next();
+});
+
 
 // Handler Functions for TOURS
 // Middleware for query manipulation, aliasing

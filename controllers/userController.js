@@ -49,23 +49,22 @@ const upload = multer({  // dest to save files in fs
 
 // Upload user photo middleware function
 exports.uploadUserPhoto = upload.single('photo');
-
 // Middleware Function for resizing user photos (if needed)
-exports.resizeUserPhoto = (req, res, next) => {
+exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
     if (!req.file) return next();
 
     // Saving filename on file object
     req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
 
     // Resizing image
-    sharp(req.file.buffer)
-    .resize(500, 500) // width, height
-    .toFormat('jpeg') // to jpeg
-    .jpeg({ quality: 90 }) // 90% quality
-    .toFile(`public/img/users/${req.file.filename}`);
+    await sharp(req.file.buffer)
+        .resize(500, 500) // width, height
+        .toFormat('jpeg') // to jpeg
+        .jpeg({ quality: 90 }) // 90% quality
+        .toFile(`public/img/users/${req.file.filename}`);
 
     next();
-};
+});
 
 // ------ Handler Functions for USERS ------- \\
 
