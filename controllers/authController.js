@@ -7,7 +7,7 @@ const User = require('../models/userModel');
 // Importing Utils
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
-const sendEmail = require('../utils/email');
+const Email = require('../utils/email');
 
 // Function for signing tokens
 const signToken = id => {
@@ -49,6 +49,10 @@ const createSendToken = (user, statusCode, res) => {
 exports.signup = catchAsync(async (req, res, next) => {
     // Creating new User
     const newUser = await User.create(req.body);
+
+    // Sending Welcome Email
+    const url = `${req.protocol}://${req.get('host')}/me`;
+    await new Email(newUser, url).sendWelcome();
 
     // Sending Status & JSON
     createSendToken(newUser, 201, res);
@@ -145,14 +149,10 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
     // Send it back as an email
     const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
-    const message = `Forgot your password? Submit a patch request with your new password and password confirm to: ${resetURL}\n If you didn't forget your password, ignore this email.`;
 
-    try { // Try / Catch because something more HAS to be done
-        await sendEmail({
-            email: user.email,
-            subject: 'Your password reset token',
-            message
-        });
+    try {
+        // Sending reset password email
+        await new Email(user, resetURL).sendPasswordReset();
     
         // Sending Status & JSON
         res.status(200).json({
